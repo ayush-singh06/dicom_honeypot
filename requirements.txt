@@ -1,0 +1,4 @@
+pynetdicom
+pydicom
+numpy
+requests
