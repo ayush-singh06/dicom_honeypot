@@ -1,10 +1,5 @@
 # 🏥 DICOMTRAP: High-Interaction Medical Honeynet & SIEM
 
-[![License](https://img.shields.ext/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.ext/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Docker](https://img.shields.ext/badge/docker-ready-green.svg)](https://www.docker.com/)
-[![Grafana](https://img.shields.ext/badge/dashboard-Grafana-orange.svg)](https://grafana.com/)
-
 **DICOMTRAP** is an advanced cyber-deception platform that emulates a vulnerable Medical Imaging Server (PACS). It is designed to attract, engage, and analyze attackers targeting healthcare infrastructure, providing a scalable, distributed solution for real-time threat intelligence.
 
 ---
