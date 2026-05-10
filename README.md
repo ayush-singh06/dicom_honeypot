@@ -18,8 +18,10 @@ Imagine a hospital network under attack. A hacker scans the network, finds an op
 
 ### 1. The Sensor (Honeypot Node)
 *   **Protocol:** Implements the full DICOM network handshake using `pynetdicom`.
-*   **Deception Engine:** Uses **NumPy** for procedural generation of 512x512 pixel arrays, creating structurally valid but biologically fake DICOM files.
+*   **Deception Engine:** Uses the `Faker` library to procedurally generate hundreds of realistic patient records on the fly, and injects them into real anonymized medical scans (`pydicom` test data) to create structurally valid but completely fake DICOM files.
 *   **Audio Intelligence:** Uses Windows `winsound` to provide real-time auditory feedback on threat levels (Scanning vs. Exfiltration).
+*   **High-Resolution ML Logging:** Tracks micro-behaviors (query speed, specific search terms, requested DICOM presentation contexts) to build a dataset for future Machine Learning profiling.
+*   **Incident Response:** Features a Discord Webhook integration for instant mobile push notifications when an attack occurs.
 
 ### 2. The SIEM Pipeline (PLG Stack)
 *   **Loki:** A high-efficiency log aggregation system that receives structured JSON logs via an asynchronous multi-threaded pipeline.
@@ -61,48 +63,35 @@ python honeypot.py
 
 ## 🧪 Running a Simulated Attack (The Demo)
 
-To demonstrate the system's effectiveness, open a new terminal and simulate a hacker's lifecycle:
+To demonstrate the system's effectiveness and massive scale, we use a custom Advanced Persistent Threat (APT) simulation script.
 
-### Stage 1: Reconnaissance (Scan)
-Hackers scan for open medical devices.
+### Step 1: Start the Attack Simulator
+Open a new terminal and run:
 ```bash
-echoscu -v 127.0.0.1 11112
+python attacker_simulation.py
 ```
-*Result: Short beep. "Scan" entry appears in Grafana.*
 
-### Stage 2: Enumeration (Browse)
-Hackers search the database for high-value patient data.
-```bash
-findscu -v -S -k 0010,0010="" 127.0.0.1 11112
-```
-*Result: Medium beep. Logs "Wildcard Search" in the SIEM.*
-
-### Stage 3: Exfiltration (Theft)
-Hackers attempt to download the medical images.
-1. **Start Hacker's Receiver:** `storescp -v 11113 -od received_images`
-2. **Execute Theft:** 
-   ```bash
-   movescu -v -S -aem STORESCP -aec HONEYPOTAE 127.0.0.1 11112 -k StudyInstanceUID=1.2.826.0.1.3680043.10.1.1.20260217.1
-   ```
-*Result: 🚨 Triple-beep alarm! A fake image is generated and sent to the hacker's server.*
+### The 3-Stage Attack Lifecycle:
+1. **Reconnaissance (Scan):** The script sends a `C-ECHO` to ping the honeypot.
+   *Result: Short beep. Honeypot logs the scanner's digital fingerprint (requested_contexts) for future ML profiling.*
+2. **Enumeration (Browse):** The script executes a wildcard (`*`) `C-FIND` query, dumping the entire generated database of 100+ fake patients to the attacker's screen.
+   *Result: Medium beep. ML Logger records the query speed and wildcard search.*
+3. **Exfiltration (Theft):** The script launches a built-in storage server and sends a `C-MOVE` command to automatically steal the high-value medical scans.
+   *Result: 🚨 Triple-beep alarm! A Discord Push Notification is instantly sent to your phone. Fake CT scans are dynamically generated, injected with fake names, and downloaded to the `received_images/` folder on the attacker's machine.*
 
 ---
 
 ## 📁 Project Structure
 ```text
-├── honeypot.py         # Main Sensor logic & Data Deception engine
-├── docker-compose.yml  # SIEM Infrastructure orchestration (Loki/Grafana)
-├── requirements.txt    # Python dependencies
-├── README.md           # Professional documentation
-└── received_images/    # Forensic folder for exfiltrated trap data
+├── honeypot.py             # Main Sensor logic, Data Deception, and ML Logging
+├── attacker_simulation.py  # Automated 3-stage APT attack script for live demos
+├── attacks.log             # High-resolution JSON behavioral dataset for ML
+├── docker-compose.yml      # SIEM Infrastructure orchestration (Loki/Grafana)
+├── requirements.txt        # Python dependencies
+├── reference_file.md       # Personal technical cheat sheet and roadmap
+├── README.md               # Professional documentation
+└── received_images/        # Forensic folder where stolen trap files are saved
 ```
-
----
-
-## 🧠 Future Roadmap
-*   **Web Dashboard:** Hosting Grafana on Oracle Cloud for public viewing.
-*   **Alerting:** Integration with Discord/Slack for real-time mobile push notifications of attacks.
-*   **Machine Learning:** Training a model on attack logs to predict future medical data breaches.
 
 ---
 

@@ -2,3 +2,4 @@ pynetdicom
 pydicom
 numpy
 requests
+faker
