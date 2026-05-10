@@ -32,13 +32,13 @@ This document explains **exactly** how we built this project, why we chose each 
 We started by writing a Python script that uses `pynetdicom` to listen on port `11112`. We wrote "Handlers"—functions that trigger when a specific command arrives.
 *   *Why:* To make the computer act like a real medical device.
 
-### Step 2: Creating "Fake Data" (Numpy)
-We used the `numpy` library to generate a 512x512 array of random numbers. 
-*   *Why:* Real DICOM files are huge. Instead of storing 1,000 real images (which is illegal/private), we **mathematically generate** a fake image the instant a hacker tries to steal one. This is "Procedural Generation."
+### Step 2: Creating "Fake Data" (Faker & Pydicom)
+We used the `Faker` library to dynamically generate hundreds of realistic patient names and IDs. We then use `pydicom` to load a real, anonymized CT scan and silently overwrite its internal metadata with our fake patient data. 
+*   *Why:* Real DICOM files are huge. Instead of storing thousands of real images (which is illegal/private), we dynamically build a highly-convincing fake image the instant a hacker tries to steal one.
 
-### Step 3: Structured Logging (JSON)
-We changed the logs from "Plain Text" to "JSON." 
-*   *Why:* Databases like Loki cannot "read" human sentences easily. JSON turns `[Attacker 127.0.0.1 scanned]` into `{"attacker_ip": "127.0.0.1", "action": "scan"}`. This allows us to filter data by "Action" later in Grafana.
+### Step 3: High-Resolution Structured Logging (JSON)
+We changed the logs from "Plain Text" to "JSON" and added High-Resolution fields (`time_since_last_req_ms`, `requested_contexts`, `search_term`).
+*   *Why:* Databases like Loki cannot "read" human sentences easily. JSON turns `[Attacker 127.0.0.1 scanned]` into `{"attacker_ip": "127.0.0.1", "action": "scan"}`. The extra High-Resolution fields are critical for building a dataset that will train a Machine Learning model next semester to detect automated bots based on query speed and fingerprinting.
 
 ### Step 4: Building the "Central Brain" (Docker + Loki)
 We used Docker to run **Loki**. 
@@ -59,14 +59,14 @@ We added `winsound.Beep` to the script.
 
 ## 3. 🔄 How the Data Flows (The "Story")
 
-1.  **Attacker** runs `movescu` (The Theft).
-2.  **Honeypot** receives the request and triggers `handle_move`.
-3.  **Honeypot** immediately starts a **Thread** to play an alarm beep.
-4.  **Honeypot** sends the Attacker's IP to an **API** to find their City/Country.
-5.  **Honeypot** packs all this info into a **JSON** object.
-6.  **Honeypot** sends this JSON to **Loki** over the network.
-7.  **Grafana** sees the new data in Loki and draws a **Red Dot** on the map.
-8.  **Honeypot** sends a **Fake Image** to the attacker's server (`storescp`) to finish the trap.
+1.  **Attacker** runs `attacker_simulation.py`.
+2.  **Attacker** sends a `C-MOVE` (The Theft) command.
+3.  **Honeypot** receives the request and triggers `handle_move`.
+4.  **Honeypot** immediately starts a **Thread** to play an alarm beep and fires an HTTP request to a **Discord Webhook** for a mobile push notification.
+5.  **Honeypot** extracts ML behavioral data (query speed, requested contexts) and Geo-IP location.
+6.  **Honeypot** packs all this info into a **JSON** object and sends it to **Loki**.
+7.  **Grafana** sees the new data in Loki and updates the Threat Dashboards.
+8.  **Honeypot** injects fake data into a real CT scan and sends it back to the attacker's local `received_images` folder to finish the trap.
 
 ---
 
@@ -75,10 +75,29 @@ We added `winsound.Beep` to the script.
 ### Start Order:
 1.  **Docker Desktop:** (Must be running).
 2.  **SIEM:** `docker-compose up -d`
-3.  **Receiver (The Hacker's Safe):** `storescp -v 11113 -od received_images`
-4.  **The Trap (Honeypot):** `python honeypot.py` (Run in CMD).
+3.  **The Trap (Honeypot):** `python honeypot.py` (Run in CMD for audio).
 
-### Attack Commands:
-*   **Scan:** `echoscu -v 127.0.0.1 11112`
-*   **Browse:** `findscu -v -S -k 0010,0010="" 127.0.0.1 11112`
-*   **Steal:** `movescu -v -S -aem STORESCP -aec HONEYPOTAE 127.0.0.1 11112 -k StudyInstanceUID=1.2.826.0.1.3680043.10.1.1.20260217.1`
+### Attack Simulation:
+Open a **second terminal** window and run:
+```bash
+python attacker_simulation.py
+```
+*(This automatically runs the C-ECHO scan, C-FIND database dump, starts a local receiver, and executes the C-MOVE theft).*
+
+---
+
+## 5. 🔮 Future Roadmap (7th Semester Extension)
+
+To elevate this project in the next semester, we will implement the following advanced cybersecurity concepts:
+
+### 1. "Radioactive" Honeytokens (DICOM Watermarking)
+*   **Concept:** Secretly injecting a unique tracking ID (e.g., `TRACKING-ID: NODE-ALPHA-992`) into an obscure DICOM metadata tag of the fake image before it is sent to the attacker.
+*   **Purpose:** If the stolen dataset is ever leaked or sold on the Dark Web, researchers can analyze the file, extract the hidden tag, and mathematically prove exactly which honeypot node it was stolen from and at what exact time.
+
+### 2. The "Tarpit" (Active Network Deception)
+*   **Concept:** Instead of sending the fake image to the attacker instantly, the honeypot will intentionally slow down the network connection, transferring the file at a crawling speed (e.g., 1 kilobyte per second).
+*   **Purpose:** This wastes the attacker's server resources, traps their automated scanning scripts in a prolonged connection, and buys the hospital's Incident Response team hours to trace the attacker's IP address before they realize they are stuck in a trap.
+
+### 3. Machine Learning & Attacker Profiling
+*   **Concept:** Utilizing the high-resolution JSON data gathered during the 6th semester (query speeds, search terms, and `requested_contexts` DICOM dialects) to train a Machine Learning classification model (using Scikit-learn or PyTorch).
+*   **Purpose:** The ML model will automatically classify the skill level and type of attacker (e.g., "Automated Nmap Scanner", "Ransomware Bot", or "Advanced Persistent Threat") based purely on their behavioral fingerprint, without relying on traditional IP blocklists.
