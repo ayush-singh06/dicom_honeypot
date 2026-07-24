@@ -78,7 +78,7 @@ python attacker_simulation.py
    *Result: Medium beep. ML Logger records the query speed and wildcard search.*
 3. **Exfiltration (Theft):** The script launches a built-in storage server and sends a `C-MOVE` command to automatically steal the high-value medical scans.
    *Result: 🚨 Triple-beep alarm! A Discord Push Notification is instantly sent to your phone. Fake CT scans are dynamically generated, injected with fake names, and downloaded to the `received_images/` folder on the attacker's machine.*
-
+NOTE : To view the .dcm images recieved in recieved_images/ folder visit https://dicomviewer.net/viewer2/localbasic
 ---
 
 ## 📁 Project Structure
